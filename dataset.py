@@ -33,3 +33,4 @@ class HoloDataset(Dataset):
         target = torch.tensor(abs(round(row['defocus_label'])), dtype=torch.float32)
 
         return combined, target
+
