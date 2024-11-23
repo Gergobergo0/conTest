@@ -1,0 +1,135 @@
+import numpy as np
+import os
+import sys
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import random_split
+from metrics_utils import Metrics
+
+
+
+
+
+
+
+
+
+
+
+class TrainingManager:
+    def __init__(self, model, train_loader, val_loader, device):
+        self.model = model
+        self.train_loader = train_loader
+        self.val_loader = val_loader
+        self.device = device
+        self.criterion = nn.SmoothL1Loss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.00005)
+        self.train_losses = []
+        self.val_losses = []
+
+    def train(self, epochs):
+        self.model.to(self.device)
+        best_val_loss = float('inf')
+        best_accuracy = 0
+        patience = 3  # Maximum stagnáló epochok száma
+        patience_counter = 0
+
+        for epoch in range(epochs):
+            # Training
+            self.model.train()
+            total_loss = 0
+            for images, labels in self.train_loader:
+                images, labels = images.to(self.device), labels.to(self.device)
+                self.optimizer.zero_grad()
+                outputs = self.model(images)
+                loss = self.criterion(outputs, labels)
+                loss.backward()
+                self.optimizer.step()
+                total_loss += loss.item()
+            avg_train_loss = total_loss / len(self.train_loader)
+            self.train_losses.append(avg_train_loss)
+
+            # Validation
+            avg_val_loss = None
+            if self.val_loader is not None:
+                self.model.eval()
+                total_val_loss = 0
+                y_true = []
+                y_pred = []
+                with torch.no_grad():
+                    for images, labels in self.val_loader:
+                        images, labels = images.to(self.device), labels.to(self.device)
+                        outputs = self.model(images)
+                        y_true.extend(labels.cpu().numpy().flatten())
+                        y_pred.extend(outputs.cpu().numpy().flatten())
+                        val_loss = self.criterion(outputs, labels)
+                        total_val_loss += val_loss.item()
+                avg_val_loss = total_val_loss / len(self.val_loader)
+                self.val_losses.append(avg_val_loss)
+
+                # Metrikák számítása
+                mae = Metrics.mae(np.array(y_true), np.array(y_pred))
+                rmse = Metrics.rmse(np.array(y_true), np.array(y_pred))
+                accuracy = Metrics.accuracy_within_tolerance(np.array(y_true), np.array(y_pred), tolerance=1)
+
+                # Early Stopping
+                if avg_val_loss < best_val_loss or accuracy > best_accuracy:
+                    best_val_loss = avg_val_loss
+                    patience_counter = 0
+                    best_accuracy = accuracy
+                else:
+                    patience_counter += 1
+                    if patience_counter >= patience:
+                        print("Early stopping triggered.")
+                        break
+
+                # Kiírás minden epoch után
+                print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.4f}, "
+                      f"Validation Loss: {avg_val_loss:.4f}, MAE: {mae:.4f}, RMSE: {rmse:.4f}, "
+                      f"Accuracy: {accuracy:.2f}%")
+
+            else:
+                print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.4f}")
+
+    def validate(self):
+        if self.val_loader is None:
+            print("No validation data provided. Skipping validation.")
+            return
+        self.model.eval()
+        total_loss = 0
+        y_true = []
+        y_pred = []
+        with torch.no_grad():
+            for images, labels in self.val_loader:
+                images, labels = images.to(self.device), labels.to(self.device)
+                outputs = self.model(images)
+
+                # Mentjük a valós és predikált értékeket
+                y_true.extend(labels.cpu().numpy().flatten())
+                y_pred.extend(outputs.cpu().numpy().flatten())
+
+                loss = self.criterion(outputs, labels)
+                total_loss += loss.item()
+
+        avg_val_loss = total_loss / len(self.val_loader)
+
+        # Pontossági metrikák kiszámítása
+        mae = Metrics.mae(np.array(y_true), np.array(y_pred))
+        rmse = Metrics.rmse(np.array(y_true), np.array(y_pred))
+        accuracy = Metrics.accuracy_within_tolerance(np.array(y_true), np.array(y_pred), tolerance=1)
+
+        print(f"Validation Loss: {avg_val_loss:.4f}, MAE: {mae:.4f}, RMSE: {rmse:.4f}, Accuracy: {accuracy:.2f}%")
+
+        return avg_val_loss
+
+
+    def predict(self, test_loader):
+        self.model.eval()
+        predictions = []
+        with torch.no_grad():
+            for images, _ in test_loader:
+                images = images.to(self.device)
+                outputs = self.model(images)
+                predictions.extend(outputs.cpu().numpy())
+        return predictions
