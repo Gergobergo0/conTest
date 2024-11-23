@@ -20,11 +20,16 @@ class TrainingManager:
         self.device = device
         self.criterion = nn.SmoothL1Loss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=5, verbose=True)
         self.train_losses = []
         self.val_losses = []
 
     def train(self, epochs):
         self.model.to(self.device)
+        best_loss = float('inf')
+        patience = 10
+        patience_counter = 0
+
         for epoch in range(epochs):
             # Training
             self.model.train()
@@ -47,6 +52,7 @@ class TrainingManager:
                 total_val_loss = 0
                 y_true = []
                 y_pred = []
+
                 with torch.no_grad():
                     for images, labels in self.val_loader:
                         images, labels = images.to(self.device), labels.to(self.device)
@@ -62,7 +68,15 @@ class TrainingManager:
                 mae = Metrics.mae(np.array(y_true), np.array(y_pred))
                 rmse = Metrics.rmse(np.array(y_true), np.array(y_pred))
                 accuracy = Metrics.accuracy_within_tolerance(np.array(y_true), np.array(y_pred), tolerance=1)
-
+                self.scheduler.step(avg_val_loss)
+                if avg_val_loss < best_loss:
+                    best_loss = avg_val_loss
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+                    if patience_counter >= patience:
+                        print("Early stopping")
+                        break
                 # Epoch kiírás
                 print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.4f}, "
                       f"Validation Loss: {avg_val_loss:.4f}, MAE: {mae:.4f}, RMSE: {rmse:.4f}, "

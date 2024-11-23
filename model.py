@@ -39,8 +39,9 @@ class FocusNetPretrained(nn.Module):
 
         # Rétegek fagyasztása
         for name, param in self.model.named_parameters():
-            if "layer4" not in name:  # Csak magasabb rétegek tanulhatnak
-                param.requires_grad = False
+            param.requires_grad = True
+
+
 
         # Kimeneti réteg konfigurálása
         self.model.fc = nn.Sequential(

@@ -17,11 +17,16 @@ class HoloDataset(Dataset):
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
         file_id = row['filename_id']
+
         amplitude_path = os.path.join(self.root_dir, f"{file_id}_amp.png")
         phase_path = os.path.join(self.root_dir, f"{file_id}_phase.png")
 
-        amplitude = Image.open(amplitude_path).convert("L")  # Grayscale
-        phase = Image.open(phase_path).convert("L")  # Grayscale
+        try:
+            amplitude = Image.open(amplitude_path).convert("L")
+            phase = Image.open(phase_path).convert("L")
+        except FileNotFoundError:
+            print(f"Missing file: {amplitude_path} or {phase_path}")
+            raise
 
         # Kombinálás 3 csatornás RGB kép formájában
         combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3 csatornás
@@ -30,7 +35,8 @@ class HoloDataset(Dataset):
             combined = self.transform(combined)
 
         # Target érték
-        target = torch.tensor(abs(round(row['defocus_label'])), dtype=torch.float32)
+        target = torch.tensor(abs(round(row['defocus_label'])), dtype=torch.float32).unsqueeze(-1)
+
 
         return combined, target
 
