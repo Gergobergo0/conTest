@@ -7,7 +7,7 @@ import torch.optim as optim
 from torch.utils.data import random_split
 from metrics_utils import Metrics
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-
+from torch.optim.lr_scheduler import StepLR
 
 
 
@@ -26,8 +26,11 @@ class TrainingManager:
         self.val_loader = val_loader
         self.device = device
         self.criterion = nn.SmoothL1Loss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.005)
-        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=2, verbose=True)
+        self.optimizer = optim.Adam([
+            {'params': self.model.fc.parameters(), 'lr': 0.001},  # Újonnan tanított réteg
+            {'params': filter(lambda p: p.requires_grad, self.model.parameters()), 'lr': 0.0001}  # Pretrained rétegek
+        ])
+        self.scheduler = StepLR(self.optimizer, step_size=5, gamma=0.5)
         self.train_losses = []
         self.val_losses = []
 
@@ -35,7 +38,7 @@ class TrainingManager:
         self.model.to(self.device)
         best_val_loss = float('inf')
         best_accuracy = 0
-        patience = 3  # Maximum stagnáló epochok száma
+        patience = 10  # Maximum stagnáló epochok száma
         patience_counter = 0
 
         for epoch in range(epochs):
@@ -75,7 +78,7 @@ class TrainingManager:
                 mae = Metrics.mae(np.array(y_true), np.array(y_pred))
                 rmse = Metrics.rmse(np.array(y_true), np.array(y_pred))
                 accuracy = Metrics.accuracy_within_tolerance(np.array(y_true), np.array(y_pred), tolerance=1)
-                self.scheduler.step(avg_val_loss)
+                self.scheduler.step()
                 min_delta = 0.001
                 # Early Stopping
                 if (avg_val_loss < best_val_loss - min_delta) or (accuracy > best_accuracy):
