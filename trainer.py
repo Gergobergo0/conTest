@@ -18,30 +18,13 @@ class TrainingManager:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.device = device
-        self.criterion = nn.HuberLoss()
-        # Az fc paraméterek lekérése
-        fc_params = list(self.model.model.fc.parameters())
-
-        # A többi paraméter, amely tanulható, és nem része az fc_params-nek
-        other_params = [p for p in self.model.parameters() if p.requires_grad and p not in fc_params]
-
-        # Optimizer inicializálása
-        self.optimizer = optim.Adam([
-            {'params': fc_params, 'lr': 0.001},  # Magasabb tanulási ráta az fc réteghez
-            {'params': other_params, 'lr': 1e-5}  # Alacsonyabb tanulási ráta a többi réteghez
-        ])
-
-        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=3, verbose=True)
+        self.criterion = nn.SmoothL1Loss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
         self.train_losses = []
         self.val_losses = []
 
     def train(self, epochs):
         self.model.to(self.device)
-        best_val_loss = float('inf')
-        best_accuracy = 0
-        patience = 15  # Maximum stagnáló epochok száma
-        patience_counter = 0
-
         for epoch in range(epochs):
             # Training
             self.model.train()
@@ -75,30 +58,18 @@ class TrainingManager:
                 avg_val_loss = total_val_loss / len(self.val_loader)
                 self.val_losses.append(avg_val_loss)
 
-                # Metrikák számítása
+                # Accuracy számítás
                 mae = Metrics.mae(np.array(y_true), np.array(y_pred))
                 rmse = Metrics.rmse(np.array(y_true), np.array(y_pred))
-                accuracy = Metrics.accuracy_within_tolerance(np.array(y_true), np.array(y_pred), tolerance=0.4)
-                self.scheduler.step(avg_val_loss)
-                min_delta = 0.001
-                # Early Stopping
-                if (avg_val_loss < best_val_loss - min_delta) or (accuracy > best_accuracy):
-                    best_val_loss = avg_val_loss
-                    patience_counter = 0
-                    best_accuracy = accuracy
-                else:
-                    patience_counter += 1
-                    if patience_counter >= patience:
-                        print("Early stopping triggered.")
-                        break
+                accuracy = Metrics.accuracy_within_tolerance(np.array(y_true), np.array(y_pred), tolerance=1)
 
-                # Kiírás minden epoch után
+                # Epoch kiírás
                 print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.4f}, "
                       f"Validation Loss: {avg_val_loss:.4f}, MAE: {mae:.4f}, RMSE: {rmse:.4f}, "
                       f"Accuracy: {accuracy:.2f}%")
-
             else:
                 print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.4f}")
+
 
     def validate(self):
         if self.val_loader is None:

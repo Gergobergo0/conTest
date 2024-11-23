@@ -16,9 +16,9 @@ if __name__ == "__main__":
     train_image_dir = os.path.join(base_dir, "train_data")
 
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),  # ResNet18 bemeneti méret
+        transforms.Resize((224, 224)),  # Egységes kép méretezés
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalizálás 3 csatornára
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # [-1, 1] skálázás
     ])
 
     # Train dataset betöltése
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_data, batch_size=64, shuffle=False)
 
     # Modell inicializálása
-    model = FocusNetPretrained()
+    model = FocusNet()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
