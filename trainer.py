@@ -6,46 +6,30 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import random_split
 from metrics_utils import Metrics
-from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.lr_scheduler import StepLR
 from torchvision.models import resnet18, ResNet18_Weights
-
+from out_csv import export
 
 
 class TrainingManager:
-    def __init__(self, model, train_loader, val_loader, device):
+    def __init__(self, model, train_loader, val_loader,test_loader, device):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
+        self.test_loader = test_loader
         self.device = device
-        self.criterion = nn.HuberLoss(delta=1.0)
-        # self.criterion = nn.SmoothL1Loss()  # Kevésbé érzékeny kiugró értékekre
-        # self.criterion = nn.MSELoss()  # Négyzetes hibák csökkentése
-        # self.criterion = nn.L1Loss()  # Abszolút hiba csökkentése
-        # self.criterion = nn.CrossEntropyLoss()  # Ha osztályozást szeretnél
-
+        self.criterion = nn.SmoothL1Loss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
-        # self.optimizer = optim.AdamW(self.model.parameters(), lr=0.001)  # Súlyok szétválasztott frissítése
-        # self.optimizer = optim.SGD(self.model.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  # Stochastic Gradient Descent
-        # self.optimizer = optim.RMSprop(self.model.parameters(), lr=0.001, alpha=0.99, weight_decay=0.0001)  # RMSprop
-        # self.optimizer = optim.Adagrad(self.model.parameters(), lr=0.01)  # Adagrad
-        # self.optimizer = optim.Adam([
-        #     {'params': self.model.model.fc.parameters(), 'lr': 0.001},  # Utolsó rétegek
-        #     {'params': self.model.model.layer4.parameters(), 'lr': 0.0001}  # Mélyebb rétegek
-        # ])
-
-        self.scheduler = CosineAnnealingLR(self.optimizer, T_max=10, eta_min=1e-6)
-        # self.scheduler = StepLR(self.optimizer, step_size=5, gamma=0.5)  # Lépésenkénti tanulási ráta csökkentés
-        # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=5, verbose=True)  # Ha a validáció nem javul
-        # self.scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.9)  # Exponenciális csökkentés
-
+        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=5, verbose=True)
         self.train_losses = []
         self.val_losses = []
+
 
     def train(self, epochs):
         self.model.to(self.device)
         best_loss = float('inf')
-        patience = 5
+        patience = 10
         patience_counter = 0
 
         for epoch in range(epochs):
@@ -99,9 +83,11 @@ class TrainingManager:
                 print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.4f}, "
                       f"Validation Loss: {avg_val_loss:.4f}, MAE: {mae:.4f}, RMSE: {rmse:.4f}, "
                       f"Accuracy: {accuracy:.2f}%")
+                if rmse < 2 or accuracy > 50:
+                    export(self.model, self.test_loader, self.device, epoch, 16, rmse)
             else:
                 print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.4f}")
-
+        export(self.model, self.test_loader, self.device, epochs, 16, best_loss)
 
     def validate(self):
         if self.val_loader is None:

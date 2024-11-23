@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
-from dataset import HoloDataset
+from dataset import HoloDataset,HoloDataset_test
 from model import FocusNet, FocusNetPretrained
 from trainer import TrainingManager
 
@@ -14,19 +14,17 @@ if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.abspath(__file__))
     train_csv = os.path.join(base_dir, "data_labels_train.csv")
     train_image_dir = os.path.join(base_dir, "train_data")
+    test_image_dir = os.path.join(base_dir, "test_data")
 
     transform = transforms.Compose([
-        transforms.Resize((128, 128)),  # Fix méret
-        transforms.RandomHorizontalFlip(p=0.5),  # Tükrözés
-        transforms.RandomVerticalFlip(p=0.5),  # Tükrözés
-        transforms.RandomAffine(degrees=10, scale=(0.9, 1.1), fill=0),  # Enyhe forgatás és zoom
-        transforms.ColorJitter(brightness=0.1, contrast=0.1),  # Enyhe fényerő és kontraszt
-        transforms.ToTensor(),  # Tenzorrá alakítás
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalizálás
+        transforms.Resize((128, 128)),  # Méretezés
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalizálás
     ])
 
     # Train dataset betöltése
     train_dataset = HoloDataset(train_csv, train_image_dir, transform=transform)
+    test_dataset = HoloDataset_test(test_image_dir, transform=transform)
 
     # Train-validation split
     # Train-validation split
@@ -36,13 +34,14 @@ if __name__ == "__main__":
 
     train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_data, batch_size=32, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
     # Modell inicializálása
     model = FocusNetPretrained()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    manager = TrainingManager(model, train_loader, val_loader, device)
+    manager = TrainingManager(model, train_loader, val_loader,test_loader, device)
 
     # Tanítás
     manager.train(epochs=50)

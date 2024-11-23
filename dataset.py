@@ -5,6 +5,7 @@ from PIL import Image
 import pandas as pd
 import os
 
+
 class HoloDataset(Dataset):
     def __init__(self, csv_file, root_dir, transform=None):
         self.data = pd.read_csv(csv_file)
@@ -40,3 +41,49 @@ class HoloDataset(Dataset):
 
         return combined, target
 
+
+
+
+
+
+
+
+class HoloDataset_test(Dataset):                    # Erre azért van szükség, mert neki nincs csv-je
+    def __init__(self, root_dir, transform=None):
+        self.root_dir = root_dir
+        self.image_ids = self._get_image_ids()
+        self.transform = transform
+
+    def _get_image_ids(self):
+        file_ids = set()
+        for filename in os.listdir(self.root_dir):
+            if filename.endswith("_amp.png") or filename.endswith("_phase.png"):
+                base_id = filename.rsplit("_", 1)[0]  # Extracts the file ID before "_amp" or "_phase"
+                file_ids.add(base_id)
+        return sorted(file_ids)  # Sort for consistency
+
+    def __len__(self):
+        return len(self.image_ids)
+
+    def __getitem__(self, idx):
+        file_id = self.image_ids[idx]
+
+        # Construct image paths
+        amplitude_path = os.path.join(self.root_dir, f"{file_id}_amp.png")
+        phase_path = os.path.join(self.root_dir, f"{file_id}_phase.png")
+
+        # Load images
+        try:
+            amplitude = Image.open(amplitude_path).convert("L")
+            phase = Image.open(phase_path).convert("L")
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Missing file: {e.filename}")
+
+        # Combine amplitude and phase images (e.g., as 2-channel tensor)
+        combined = Image.merge("RGB", (amplitude, phase, phase))  # 3-channel RGB format
+
+        # Apply transformations if provided
+        if self.transform:
+            combined = self.transform(combined)
+
+        return combined, file_id  # Return the combined image and the file ID
