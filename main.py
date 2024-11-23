@@ -8,6 +8,7 @@ from dataset import HoloDataset
 from model import FocusNet, FocusNetPretrained
 from trainer import TrainingManager
 
+
 if __name__ == "__main__":
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,16 +16,17 @@ if __name__ == "__main__":
     train_image_dir = os.path.join(base_dir, "train_data")
 
     transform = transforms.Compose([
-        transforms.Resize((128, 128)),
+        transforms.Resize((224, 224)),
         transforms.RandomHorizontalFlip(0.5),
         transforms.RandomVerticalFlip(0.5),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5], std=[0.5])  # Az adatok 0-1 közé kerülnek
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # 3 csatorna normalizálás
     ])
 
     # Train dataset betöltése
     train_dataset = HoloDataset(train_csv, train_image_dir, transform=transform)
 
+    # Train-validation split
     # Train-validation split
     train_size = int(0.8 * len(train_dataset))
     val_size = len(train_dataset) - train_size
@@ -34,16 +36,14 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_data, batch_size=64, shuffle=False)
 
     # Modell inicializálása
-    #model = FocusNet()
     model = FocusNetPretrained()
 
-    device = torch.device("cuda")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print(f"deivce: {device}")
-
-    # Edzési folyamat
     manager = TrainingManager(model, train_loader, val_loader, device)
-    manager.train(epochs=30)
+
+    # Tanítás
+    manager.train(epochs=50)
 
     plt.plot(manager.train_losses, label="Training Loss")
     plt.plot(manager.val_losses, label="Validation Loss")

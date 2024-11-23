@@ -6,9 +6,9 @@ import pandas as pd
 import os
 
 class HoloDataset(Dataset):
-    def __init__(self, csv_file, image_dir, transform=None):
+    def __init__(self, csv_file, root_dir, transform=None):
         self.data = pd.read_csv(csv_file)
-        self.image_dir = image_dir
+        self.root_dir = root_dir
         self.transform = transform
 
     def __len__(self):
@@ -16,20 +16,24 @@ class HoloDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
-        filename_id = row['filename_id']
-        defocus_label = row['defocus_label']
-        abs_distance = torch.tensor([abs(defocus_label)], dtype=torch.float32)
+        file_id = row['filename_id']
+        amplitude_path = os.path.join(self.root_dir, f"{file_id}_amp.png")
+        phase_path = os.path.join(self.root_dir, f"{file_id}_phase.png")
 
-        # Load images from the corresponding directory
-        amp_img = Image.open(os.path.join(self.image_dir, f"{filename_id}_amp.png")).convert("L")
-        phase_img = Image.open(os.path.join(self.image_dir, f"{filename_id}_phase.png")).convert("L")
-        mask_img = Image.open(os.path.join(self.image_dir, f"{filename_id}_mask.png")).convert("L")
+        amplitude = Image.open(amplitude_path).convert("L")  # Grayscale
+        phase = Image.open(phase_path).convert("L")  # Grayscale
+
+        # Két csatorna kombinálása
+        combined = torch.cat([
+            transforms.ToTensor()(amplitude),
+            transforms.ToTensor()(phase),
+            transforms.ToTensor()(amplitude)  # Dummy 3. csatorna
+        ], dim=0)
 
         if self.transform:
-            amp_img = self.transform(amp_img)
-            phase_img = self.transform(phase_img)
-            mask_img = self.transform(mask_img)
+            combined = self.transform(combined)
 
-        # Combine channels
-        input_img = torch.cat([amp_img, phase_img, mask_img], dim=0)
-        return input_img, abs_distance
+        # Target érték
+        target = torch.tensor(abs(round(row['defocus_label'])), dtype=torch.float32)
+
+        return combined, target

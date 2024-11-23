@@ -12,15 +12,6 @@ from torchvision.models import resnet18, ResNet18_Weights
 
 
 
-
-
-
-
-
-
-
-
-
 class TrainingManager:
     def __init__(self, model, train_loader, val_loader, device):
         self.model = model
