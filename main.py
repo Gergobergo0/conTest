@@ -16,11 +16,9 @@ if __name__ == "__main__":
     train_image_dir = os.path.join(base_dir, "train_data")
 
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.RandomHorizontalFlip(0.5),
-        transforms.RandomVerticalFlip(0.5),
+        transforms.Resize((224, 224)),  # ResNet18 bemeneti méret
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # 3 csatorna normalizálás
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalizálás 3 csatornára
     ])
 
     # Train dataset betöltése

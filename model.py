@@ -32,23 +32,22 @@ class FocusNet(nn.Module):
         x = self.fc_layers(x)
         return x
 
-
 class FocusNetPretrained(nn.Module):
     def __init__(self):
         super(FocusNetPretrained, self).__init__()
         self.model = resnet18(weights=ResNet18_Weights.DEFAULT)
 
-        # Alacsonyabb rétegek fagyasztása
+        # Rétegek fagyasztása
         for name, param in self.model.named_parameters():
-            if "layer4" not in name:  # Csak a magasabb rétegek tanulhatnak
+            if "layer4" not in name:  # Csak magasabb rétegek tanulhatnak
                 param.requires_grad = False
 
-        # Kimeneti réteg
+        # Kimeneti réteg konfigurálása
         self.model.fc = nn.Sequential(
             nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(),
             nn.Dropout(0.6),
-            nn.Linear(512, 1)
+            nn.Linear(512, 1)  # Egy kimenet a regresszióhoz
         )
 
     def forward(self, x):

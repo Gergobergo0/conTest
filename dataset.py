@@ -23,12 +23,8 @@ class HoloDataset(Dataset):
         amplitude = Image.open(amplitude_path).convert("L")  # Grayscale
         phase = Image.open(phase_path).convert("L")  # Grayscale
 
-        # Két csatorna kombinálása
-        combined = torch.cat([
-            transforms.ToTensor()(amplitude),
-            transforms.ToTensor()(phase),
-            transforms.ToTensor()(amplitude)  # Dummy 3. csatorna
-        ], dim=0)
+        # Kombinálás 3 csatornás RGB kép formájában
+        combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3 csatornás
 
         if self.transform:
             combined = self.transform(combined)
