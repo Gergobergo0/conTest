@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from torchvision.models import resnet18
+from torchvision.models import resnet18, ResNet18_Weights
+
 
 class FocusNet(nn.Module):
     def __init__(self):
@@ -34,18 +35,20 @@ class FocusNet(nn.Module):
 class FocusNetPretrained(nn.Module):
     def __init__(self):
         super(FocusNetPretrained, self).__init__()
-        self.model = resnet18(pretrained=True)
+        self.model = resnet18(weights=ResNet18_Weights.DEFAULT)
+
+
         for name, param in self.model.named_parameters():
-            if "layer3" not in name and "layer4" not in name:  # Csak az alsóbb rétegeket fagyasztjuk
+            if "layer4" not in name:  # Csak az utolsó réteg tanulhat
                 param.requires_grad = False
 
+        # A kimeneti réteg módosítása
         self.model.fc = nn.Sequential(
-        nn.Linear(self.model.fc.in_features, 512),
-        nn.ReLU(),
-        nn.Dropout(0.6),  # Nagyobb dropout arány
-        nn.Linear(512, 1)
+            nn.Linear(self.model.fc.in_features, 512),
+            nn.ReLU(),
+            nn.Dropout(0.6),
+            nn.Linear(512, 1)
         )
-
 
     def forward(self, x):
         return self.model(x)

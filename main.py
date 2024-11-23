@@ -34,10 +34,10 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_data, batch_size=64, shuffle=False)
 
     # Modell inicializálása
-    model = FocusNet()
-    #model = FocusNetPretrained()
+    #model = FocusNet()
+    model = FocusNetPretrained()
 
-    device = torch.device("cpu")
+    device = torch.device("cuda")
 
     print(f"deivce: {device}")
 

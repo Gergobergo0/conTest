@@ -27,7 +27,7 @@ class TrainingManager:
         self.device = device
         self.criterion = nn.HuberLoss()
         self.optimizer = optim.Adam([
-            {'params': self.model.fc.parameters(), 'lr': 0.001},  # Újonnan tanított réteg
+            {'params': self.model.model.fc.parameters(), 'lr': 0.001},  # Újonnan tanított réteg
             {'params': filter(lambda p: p.requires_grad, self.model.parameters()), 'lr': 1e-5}  # Pretrained rétegek
         ])
 
