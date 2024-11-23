@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import random_split
 from metrics_utils import Metrics
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR
 from torch.optim.lr_scheduler import StepLR
 from torchvision.models import resnet18, ResNet18_Weights
 
@@ -18,16 +18,16 @@ class TrainingManager:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.device = device
-        self.criterion = nn.SmoothL1Loss()
+        self.criterion = nn.HuberLoss(delta=1.0)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
-        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=5, verbose=True)
+        self.scheduler = CosineAnnealingLR(self.optimizer, T_max=10, eta_min=1e-6)
         self.train_losses = []
         self.val_losses = []
 
     def train(self, epochs):
         self.model.to(self.device)
         best_loss = float('inf')
-        patience = 10
+        patience = 5
         patience_counter = 0
 
         for epoch in range(epochs):

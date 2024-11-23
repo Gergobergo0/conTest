@@ -39,15 +39,16 @@ class FocusNetPretrained(nn.Module):
 
         # Rétegek fagyasztása
         for name, param in self.model.named_parameters():
-            param.requires_grad = True
-
-
+            if "layer3" in name or "layer4" in name or "fc" in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
 
         # Kimeneti réteg konfigurálása
         self.model.fc = nn.Sequential(
             nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(),
-            nn.Dropout(0.6),
+            nn.Dropout(0.4),
             nn.Linear(512, 1)  # Egy kimenet a regresszióhoz
         )
 
