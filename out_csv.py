@@ -14,7 +14,7 @@ def export(model, test_loader, device, epochs, batch_size, total_loss):
 
             # Convert outputs to a list of predicted values
             predictions = outputs.cpu().numpy().flatten()
-            # predictions = int(abs(float(predictions)))   # KEREKITES
+            predictions = [int(abs(round(float(pred)))) for pred in predictions]   # KEREKITES
             # Combine file IDs and predictions for saving
             for test_id, prediction in zip(file_ids, predictions):
                 results.append([test_id, prediction])  # Ensure `test_id` is used as-is, without splitting
@@ -34,4 +34,4 @@ def export(model, test_loader, device, epochs, batch_size, total_loss):
         writer.writerow(['Id', 'Expected'])
         writer.writerows(results)
 
-    print(f"Eredmények kiírva: {output_file}")
+    #print(f"Eredmények kiírva: {output_file}")
