@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     # Edzési folyamat
     manager = TrainingManager(model, train_loader, val_loader, device)
-    manager.train(epochs=10)
+    manager.train(epochs=30)
 
     plt.plot(manager.train_losses, label="Training Loss")
     plt.plot(manager.val_losses, label="Validation Loss")
