@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 from dataset import HoloDataset
-from model import FocusNet
+from model import FocusNet, FocusNetPretrained
 from trainer import TrainingManager
 
 if __name__ == "__main__":
@@ -34,6 +34,8 @@ if __name__ == "__main__":
 
     # Modell inicializálása
     model = FocusNet()
+    #model = FocusNetPretrained()
+
     device = torch.device("cpu")
 
     print(f"deivce: {device}")
