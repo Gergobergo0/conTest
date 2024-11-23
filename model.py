@@ -35,6 +35,10 @@ class FocusNetPretrained(nn.Module):
     def __init__(self):
         super(FocusNetPretrained, self).__init__()
         self.model = resnet18(pretrained=True)
+        for name, param in self.model.named_parameters():
+            if "layer4" not in name:  # A 'layer4' és a teljesen összekötött rétegek tanulhatnak
+                param.requires_grad = False
+
         self.model.fc = nn.Linear(self.model.fc.in_features, 1)  # Output layer módosítása
 
     def forward(self, x):
