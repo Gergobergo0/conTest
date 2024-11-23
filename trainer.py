@@ -28,12 +28,16 @@ class TrainingManager:
         self.val_loader = val_loader
         self.device = device
         self.criterion = nn.HuberLoss()
+        # Az fc paraméterek lekérése
         fc_params = list(self.model.model.fc.parameters())
-        # A többi tanulható paraméter kiszűrése
-        other_params = list(filter(lambda p: p.requires_grad and p not in fc_params, self.model.model.parameters()))
+
+        # A többi paraméter, amely tanulható, és nem része az fc_params-nek
+        other_params = [p for p in self.model.parameters() if p.requires_grad and p not in fc_params]
+
+        # Optimizer inicializálása
         self.optimizer = optim.Adam([
-            {'params': fc_params, 'lr': 0.001},  # Újonnan tanított réteg
-            {'params': other_params, 'lr': 1e-5}  # Pretrained rétegek
+            {'params': fc_params, 'lr': 0.001},  # Magasabb tanulási ráta az fc réteghez
+            {'params': other_params, 'lr': 1e-5}  # Alacsonyabb tanulási ráta a többi réteghez
         ])
 
         self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=3, verbose=True)
