@@ -38,11 +38,14 @@ class FocusNetPretrained(nn.Module):
         self.model = resnet18(weights=ResNet18_Weights.DEFAULT)
 
         # Rétegek fagyasztása
+        # Frozen weights (only train last layers)
         for name, param in self.model.named_parameters():
-            if "layer3" in name or "layer4" in name or "fc" in name:
-                param.requires_grad = True
-            else:
+            if "layer4" not in name:  # Csak a magasabb rétegek tanulhatnak
                 param.requires_grad = False
+
+        # Unfreeze all layers for fine-tuning
+        for param in self.model.parameters():
+            param.requires_grad = True
 
         # Kimeneti réteg konfigurálása
         self.model.fc = nn.Sequential(

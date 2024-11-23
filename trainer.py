@@ -19,8 +19,26 @@ class TrainingManager:
         self.val_loader = val_loader
         self.device = device
         self.criterion = nn.HuberLoss(delta=1.0)
+        # self.criterion = nn.SmoothL1Loss()  # Kevésbé érzékeny kiugró értékekre
+        # self.criterion = nn.MSELoss()  # Négyzetes hibák csökkentése
+        # self.criterion = nn.L1Loss()  # Abszolút hiba csökkentése
+        # self.criterion = nn.CrossEntropyLoss()  # Ha osztályozást szeretnél
+
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        # self.optimizer = optim.AdamW(self.model.parameters(), lr=0.001)  # Súlyok szétválasztott frissítése
+        # self.optimizer = optim.SGD(self.model.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)  # Stochastic Gradient Descent
+        # self.optimizer = optim.RMSprop(self.model.parameters(), lr=0.001, alpha=0.99, weight_decay=0.0001)  # RMSprop
+        # self.optimizer = optim.Adagrad(self.model.parameters(), lr=0.01)  # Adagrad
+        # self.optimizer = optim.Adam([
+        #     {'params': self.model.model.fc.parameters(), 'lr': 0.001},  # Utolsó rétegek
+        #     {'params': self.model.model.layer4.parameters(), 'lr': 0.0001}  # Mélyebb rétegek
+        # ])
+
         self.scheduler = CosineAnnealingLR(self.optimizer, T_max=10, eta_min=1e-6)
+        # self.scheduler = StepLR(self.optimizer, step_size=5, gamma=0.5)  # Lépésenkénti tanulási ráta csökkentés
+        # self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=5, verbose=True)  # Ha a validáció nem javul
+        # self.scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.9)  # Exponenciális csökkentés
+
         self.train_losses = []
         self.val_losses = []
 
