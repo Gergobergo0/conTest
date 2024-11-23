@@ -16,9 +16,15 @@ if __name__ == "__main__":
     train_image_dir = os.path.join(base_dir, "train_data")
 
     transform = transforms.Compose([
-        transforms.Resize((128, 128)),  # Méretezés
+        transforms.Resize((128, 128)),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.RandomRotation(degrees=15),
+        transforms.RandomResizedCrop(size=(128, 128), scale=(0.8, 1.0)),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2),
+        transforms.GaussianBlur(kernel_size=(3, 3), sigma=(0.1, 1.5)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalizálás
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])
 
     # Train dataset betöltése
