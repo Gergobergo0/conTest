@@ -67,7 +67,7 @@ class TrainingManager:
                 # Accuracy számítás
                 mae = Metrics.mae(np.array(y_true), np.array(y_pred))
                 rmse = Metrics.rmse(np.array(y_true), np.array(y_pred))
-                accuracy = Metrics.accuracy_within_tolerance(np.array(y_true), np.array(y_pred), tolerance=1)
+                accuracy = Metrics.accuracy_within_tolerance(np.array(y_true), np.array(y_pred), tolerance=0.4)
                 self.scheduler.step(avg_val_loss)
                 if avg_val_loss < best_loss:
                     best_loss = avg_val_loss
