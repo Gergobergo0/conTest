@@ -6,6 +6,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import random_split
 from metrics_utils import Metrics
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
 
 
 
@@ -24,7 +26,8 @@ class TrainingManager:
         self.val_loader = val_loader
         self.device = device
         self.criterion = nn.SmoothL1Loss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.00005)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.005)
+        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=2, verbose=True)
         self.train_losses = []
         self.val_losses = []
 
@@ -72,9 +75,10 @@ class TrainingManager:
                 mae = Metrics.mae(np.array(y_true), np.array(y_pred))
                 rmse = Metrics.rmse(np.array(y_true), np.array(y_pred))
                 accuracy = Metrics.accuracy_within_tolerance(np.array(y_true), np.array(y_pred), tolerance=1)
-
+                self.scheduler.step(avg_val_loss)
+                min_delta = 0.001
                 # Early Stopping
-                if avg_val_loss < best_val_loss or accuracy > best_accuracy:
+                if (avg_val_loss < best_val_loss - min_delta) or (accuracy > best_accuracy):
                     best_val_loss = avg_val_loss
                     patience_counter = 0
                     best_accuracy = accuracy
