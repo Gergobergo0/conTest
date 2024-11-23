@@ -80,7 +80,7 @@ class HoloDataset_test(Dataset):                    # Erre azért van szükség,
             raise FileNotFoundError(f"Missing file: {e.filename}")
 
         # Combine amplitude and phase images (e.g., as 2-channel tensor)
-        combined = Image.merge("RGB", (amplitude, phase, phase))  # 3-channel RGB format
+        combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3-channel RGB format
 
         # Apply transformations if provided
         if self.transform:
