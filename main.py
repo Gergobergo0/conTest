@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # Tanítás
     manager.train(epochs=50)
-
+    manager.validate()
     plt.plot(manager.train_losses, label="Training Loss")
     plt.plot(manager.val_losses, label="Validation Loss")
     plt.xlabel("Epochs")
