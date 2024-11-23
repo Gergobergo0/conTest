@@ -8,6 +8,8 @@ from torch.utils.data import random_split
 from metrics_utils import Metrics
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.lr_scheduler import StepLR
+from torchvision.models import resnet18, ResNet18_Weights
+
 
 
 
@@ -26,9 +28,12 @@ class TrainingManager:
         self.val_loader = val_loader
         self.device = device
         self.criterion = nn.HuberLoss()
+        fc_params = list(self.model.model.fc.parameters())
+        # A többi tanulható paraméter kiszűrése
+        other_params = list(filter(lambda p: p.requires_grad and p not in fc_params, self.model.model.parameters()))
         self.optimizer = optim.Adam([
-            {'params': self.model.model.fc.parameters(), 'lr': 0.001},  # Újonnan tanított réteg
-            {'params': filter(lambda p: p.requires_grad, self.model.parameters()), 'lr': 1e-5}  # Pretrained rétegek
+            {'params': fc_params, 'lr': 0.001},  # Újonnan tanított réteg
+            {'params': other_params, 'lr': 1e-5}  # Pretrained rétegek
         ])
 
         self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=3, verbose=True)
