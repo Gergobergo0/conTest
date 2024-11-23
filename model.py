@@ -39,7 +39,13 @@ class FocusNetPretrained(nn.Module):
             if "layer4" not in name:  # A 'layer4' és a teljesen összekötött rétegek tanulhatnak
                 param.requires_grad = False
 
-        self.model.fc = nn.Linear(self.model.fc.in_features, 1)  # Output layer módosítása
+        self.model.fc = nn.Sequential(
+        nn.Linear(self.model.fc.in_features, 512),
+        nn.ReLU(),
+        nn.Dropout(0.6),  # Nagyobb dropout arány
+        nn.Linear(512, 1)
+        )
+
 
     def forward(self, x):
         return self.model(x)
