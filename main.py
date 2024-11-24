@@ -32,9 +32,9 @@ if __name__ == "__main__":
     val_size = len(train_dataset) - train_size
     train_data, val_data = random_split(train_dataset, [train_size, val_size])
 
-    train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
-    val_loader = DataLoader(val_data, batch_size=32, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+    train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
+    val_loader = DataLoader(val_data, batch_size=16, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
     # Modell inicializálása
     model = FocusNetPretrained()
