@@ -20,7 +20,7 @@ class TrainingManager:
         self.test_loader = test_loader
         self.device = device
         self.criterion = nn.L1Loss()#
-        self.optimizer = optim.AdamW(self.model.parameters(), lr=0.001)
+        self.optimizer = optim.AdamW(self.model.parameters(), lr=0.0005)
         self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=5, verbose=True)
         self.train_losses = []
         self.val_losses = []
