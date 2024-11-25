@@ -12,6 +12,9 @@ from torchvision.models import resnet18, ResNet18_Weights
 from out_csv import export
 
 
+
+
+
 class TrainingManager:
     def __init__(self, model, train_loader, val_loader,test_loader, device):
         self.model = model
@@ -20,8 +23,8 @@ class TrainingManager:
         self.test_loader = test_loader
         self.device = device
         self.criterion = nn.L1Loss()#
-        self.optimizer = optim.AdamW(self.model.parameters(), lr=0.0005)
-        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=5, verbose=True)
+        self.optimizer = optim.AdamW(self.model.parameters(), lr=0.0005, weight_decay=0.01)
+        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=3, verbose=True)
         self.train_losses = []
         self.val_losses = []
 
@@ -34,6 +37,7 @@ class TrainingManager:
 
         for epoch in range(epochs):
             # Training
+
             self.model.train()
             total_loss = 0
             for images, labels in self.train_loader:
