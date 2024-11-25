@@ -94,12 +94,11 @@ class HoloDataset_test(Dataset):                    # Erre azért van szükség,
         # Combine amplitude and phase images (e.g., as 2-channel tensor)
         #combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3-channel RGB format
 
+        amplitude_tensor = transforms.ToTensor()(amplitude)
+        phase_tensor = transforms.ToTensor()(phase)
+        mask_tensor = transforms.ToTensor()(mask)
 
-        combined = torch.stack([
-            transforms.ToTensor()(amplitude),
-            transforms.ToTensor()(phase),
-            transforms.ToTensor()(mask)
-        ])
+        combined = torch.cat([amplitude_tensor, phase_tensor, mask_tensor], dim=0)
         # Apply transformations if provided
         if self.transform:
             combined = self.transform(combined)
