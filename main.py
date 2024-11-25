@@ -22,12 +22,8 @@ if __name__ == "__main__":
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalizálás
     ])"""
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),  # Magasabb felbontás a részletekhez
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomVerticalFlip(p=0.5),
-        transforms.RandomRotation(degrees=10, fill=(0,)),  # Forgatás fekete kitöltéssel
-        transforms.ToTensor(),  # Tensor konvertálás
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Skálázás saját adatokra
+        transforms.Resize((128, 128)),  # Méretezés
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalizálás
     ])
 
     # Train dataset betöltése
