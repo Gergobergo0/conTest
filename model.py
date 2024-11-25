@@ -37,35 +37,34 @@ class FocusNetPretrained(nn.Module):
         super(FocusNetPretrained, self).__init__()
         self.model = resnet18(weights=ResNet18_Weights.DEFAULT)
 
-        # Első konvolúciós réteg módosítása a 3 bemeneti csatornára (_amp, _phase, _mask_)
-        self.model.conv1 = nn.Conv2d(
-            in_channels=3,  # Három csatorna: _amp, _phase, _mask_
-            out_channels=self.model.conv1.out_channels,
-            kernel_size=self.model.conv1.kernel_size,
-            stride=self.model.conv1.stride,
-            padding=self.model.conv1.padding,
-            bias=False
-        )
+        # RGB
 
-        # Rétegek fagyasztása (opcionális)
+
+
+        # Rétegek fagyasztása
+        # Frozen weights (only train last layers)
         for name, param in self.model.named_parameters():
-            if "layer4" not in name:  # Csak a magasabb rétegek tanulhatnak
-                param.requires_grad = False
-
-        # Fine-tuning: Minden réteg tanítható
-        for param in self.model.parameters():
             param.requires_grad = True
 
-        # Kimeneti réteg konfigurálása (regresszió)
+        if "layer3" in name or "layer4" in name or "fc" in name:
+            param.requires_grad = True
+        else:
+            param.requires_grad = False
+
+        # Unfreeze all layers for fine-tuning
+        #for param in self.model.parameters():
+        #    param.requires_grad = True
+
+
+
+            
+            
         self.model.fc = nn.Sequential(
             nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(),
-            nn.Dropout(0.5),  # Dropout a túltanulás ellen
-            nn.Linear(512, 256),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(256, 1)  # Egy kimenet a regresszióhoz
-        )
+            nn.Dropout(0.4),  # Magasabb dropout a túltanulás ellen
+            nn.Linear(512, 1),
+            )
 
 
 
