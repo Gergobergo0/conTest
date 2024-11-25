@@ -22,6 +22,7 @@ if __name__ == "__main__":
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalizálás
     ])
 
+
     # Train dataset betöltése
     train_dataset = HoloDataset(train_csv, train_image_dir, transform=transform)
     test_dataset = HoloDataset_test(test_image_dir, transform=transform)
