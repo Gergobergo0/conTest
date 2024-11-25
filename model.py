@@ -52,8 +52,8 @@ class FocusNetPretrained(nn.Module):
             param.requires_grad = False
 
         # Unfreeze all layers for fine-tuning
-        #for param in self.model.parameters():
-        #    param.requires_grad = True
+        for param in self.model.parameters():
+            param.requires_grad = True
 
 
 
@@ -62,9 +62,10 @@ class FocusNetPretrained(nn.Module):
         self.model.fc = nn.Sequential(
             nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(),
-            nn.Dropout(0.4),  # Magasabb dropout a túltanulás ellen
+            nn.Dropout(0.35),  # Magasabb dropout a túltanulás ellen
             nn.Linear(512, 1),
             )
+
 
 
 
