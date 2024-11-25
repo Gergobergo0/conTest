@@ -18,8 +18,12 @@ if __name__ == "__main__":
 
     transform = transforms.Compose([ #RGB
         transforms.Resize((128, 128)),  # Méretezés
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomRotation(degrees=5),
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.RandomAffine(degrees=5, translate=(0.05, 0.05), scale=(0.95, 1.05)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalizálás
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # ImageNet normalizálás
     ])
 
 
