@@ -16,14 +16,10 @@ if __name__ == "__main__":
     train_image_dir = os.path.join(base_dir, "train_data")
     test_image_dir = os.path.join(base_dir, "test_data")
 
-    """"transform = transforms.Compose([ #RGB
+    transform = transforms.Compose([ #RGB
         transforms.Resize((128, 128)),  # Méretezés
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet normalizálás
-    ])"""
-    transform = transforms.Compose([
-        transforms.Resize((128, 128)),  # Méretezés
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalizálás
     ])
 
     # Train dataset betöltése
