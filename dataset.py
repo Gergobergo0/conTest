@@ -21,19 +21,16 @@ class HoloDataset(Dataset):
 
         amplitude_path = os.path.join(self.root_dir, f"{file_id}_amp.png")
         phase_path = os.path.join(self.root_dir, f"{file_id}_phase.png")
-        mask_path = os.path.join(self.root_dir, f"{file_id}_mask.png")#rgbs
 
         try:
             amplitude = Image.open(amplitude_path).convert("L")
             phase = Image.open(phase_path).convert("L")
-            mask = Image.open(mask_path).convert("L")#rgbs
         except FileNotFoundError:
             print(f"Missing file: {amplitude_path} or {phase_path}")
             raise
 
 
         # Kombinálás 3 csatornás RGB kép formájában
-        #
         combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3 csatornás
 
 
