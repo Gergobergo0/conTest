@@ -37,6 +37,17 @@ class FocusNetPretrained(nn.Module):
         super(FocusNetPretrained, self).__init__()
         self.model = resnet18(weights=ResNet18_Weights.DEFAULT)
 
+
+
+        #RGB
+        self.model.conv1 = nn.Conv2d(
+            in_channels=3,  # Három csatorna: _amp, _phase, _mask
+            out_channels=self.model.conv1.out_channels,  # Az eredeti kimeneti csatornák száma
+            kernel_size=self.model.conv1.kernel_size,    # Megtartjuk az eredeti kernel méretet
+            stride=self.model.conv1.stride,              # Ugyanaz a lépésméret
+            padding=self.model.conv1.padding,            # Ugyanaz a padding
+            bias=False                                   # Marad bias nélkül
+        )
         # Rétegek fagyasztása
         # Frozen weights (only train last layers)
         for name, param in self.model.named_parameters():
@@ -47,14 +58,25 @@ class FocusNetPretrained(nn.Module):
         for param in self.model.parameters():
             param.requires_grad = True
 
-        # Kimeneti réteg konfigurálása
+
         self.model.fc = nn.Sequential(
             nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(),
-            nn.Dropout(0.4),
-            nn.Linear(512, 1)  # Egy kimenet a regresszióhoz
-        )
+            nn.Dropout(0.5),  # Magasabb dropout a túltanulás ellen
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, 1)  # Egy kimenet a regresszióhoz
+            )
+
+
+
+
+      #  self.model.fc = nn.Sequential(       #RGB
+       #     nn.Linear(self.model.fc.in_features, 512),
+        #    nn.ReLU(),
+         #   nn.Dropout(0.4),
+          #  nn.Linear(512, 1)  # Egy kimenet a regresszióhoz"""
 
     def forward(self, x):
         return self.model(x)
-
