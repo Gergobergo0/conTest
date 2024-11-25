@@ -31,14 +31,10 @@ class HoloDataset(Dataset):
             print(f"Missing file: {amplitude_path} or {phase_path}")
             raise
 
-        amplitude_tensor = transforms.ToTensor()(amplitude)
-        phase_tensor = transforms.ToTensor()(phase)
-        mask_tensor = transforms.ToTensor()(mask) if os.path.exists(mask_path) else amplitude_tensor  # Ha nincs mask, akkor duplikálhatod az amplitúdót
-
-        combined = torch.cat([amplitude_tensor, phase_tensor, mask_tensor], dim=0)
 
         # Kombinálás 3 csatornás RGB kép formájában
-        #combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3 csatornás
+        #
+        combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3 csatornás
 
 
 
