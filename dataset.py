@@ -21,16 +21,26 @@ class HoloDataset(Dataset):
 
         amplitude_path = os.path.join(self.root_dir, f"{file_id}_amp.png")
         phase_path = os.path.join(self.root_dir, f"{file_id}_phase.png")
+        mask_path = os.path.join(self.root_dir, f"{file_id}_mask.png")#rgbs
 
         try:
             amplitude = Image.open(amplitude_path).convert("L")
             phase = Image.open(phase_path).convert("L")
+            mask = Image.open(mask_path).convert("L")#rgbs
         except FileNotFoundError:
             print(f"Missing file: {amplitude_path} or {phase_path}")
             raise
 
+        amplitude_tensor = transforms.ToTensor()(amplitude)
+        phase_tensor = transforms.ToTensor()(phase)
+        mask_tensor = transforms.ToTensor()(mask) if os.path.exists(mask_path) else amplitude_tensor  # Ha nincs mask, akkor duplikálhatod az amplitúdót
+
+        combined = torch.cat([amplitude_tensor, phase_tensor, mask_tensor], dim=0)
+
         # Kombinálás 3 csatornás RGB kép formájában
-        combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3 csatornás
+        #combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3 csatornás
+
+
 
         if self.transform:
             combined = self.transform(combined)
@@ -71,16 +81,24 @@ class HoloDataset_test(Dataset):                    # Erre azért van szükség,
         # Construct image paths
         amplitude_path = os.path.join(self.root_dir, f"{file_id}_amp.png")
         phase_path = os.path.join(self.root_dir, f"{file_id}_phase.png")
+        mask_path = os.path.join(self.root_dir, f"{file_id}_mask.png") #rgb-s
 
         # Load images
         try:
             amplitude = Image.open(amplitude_path).convert("L")
             phase = Image.open(phase_path).convert("L")
+            mask = Image.open(mask_path).convert("L")#rgb-s
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Missing file: {e.filename}")
 
         # Combine amplitude and phase images (e.g., as 2-channel tensor)
-        combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3-channel RGB format
+        #combined = Image.merge("RGB", (amplitude, phase, amplitude))  # 3-channel RGB format
+
+        amplitude_tensor = transforms.ToTensor()(amplitude)
+        phase_tensor = transforms.ToTensor()(phase)
+        mask_tensor = transforms.ToTensor()(mask)
+
+        combined = torch.cat([amplitude_tensor, phase_tensor, mask_tensor], dim=0)
 
         # Apply transformations if provided
         if self.transform:
