@@ -33,13 +33,14 @@ if __name__ == "__main__":
 
     # Train-validation split
     # Train-validation split
-    train_size = int(0.8 * len(train_dataset))
+    train_size = int(0.9 * len(train_dataset))
     val_size = len(train_dataset) - train_size
     train_data, val_data = random_split(train_dataset, [train_size, val_size])
 
-    train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
-    val_loader = DataLoader(val_data, batch_size=16, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
+    batch_size_ = 16
+    train_loader = DataLoader(train_data, batch_size=batch_size_, shuffle=True)
+    val_loader = DataLoader(val_data, batch_size=batch_size_, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size_, shuffle=False)
 
     # Modell inicializálása
     model = FocusNetPretrained()
@@ -47,14 +48,16 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     manager = TrainingManager(model, train_loader, val_loader,test_loader, device)
-
+    hyper_parameters = manager.hyper_parameters()
     # Tanítás
-    manager.train(epochs=50)
-    manager.validate()
+    manager.train(epochs=100)
+
     plt.plot(manager.train_losses, label="Training Loss")
     plt.plot(manager.val_losses, label="Validation Loss")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.legend()
-    plt.title("Training and Validation Loss")
+    plt.title(f"Training and Validation Loss b={batch_size_}")
+    plt.figtext(0.5, -0.1, f"{hyper_parameters}"  , ha="center", fontsize=10)
+
     plt.show()
