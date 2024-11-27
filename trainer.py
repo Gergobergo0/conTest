@@ -10,6 +10,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.lr_scheduler import StepLR
 from torchvision.models import resnet18, ResNet18_Weights
 from out_csv import export
+from LRAdjuster import LRAdjuster
 
 
 
@@ -24,8 +25,15 @@ class TrainingManager:
         self.device = device
         self.criterion = nn.L1Loss()#
         self.optimizer = optim.AdamW(self.model.parameters(), lr=0.001, weight_decay=0.01)
-        self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.4, patience=5, verbose=True)
-
+        #self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.4, patience=5, verbose=True)
+        self.lr_adjuster = LRAdjuster(
+            self.optimizer,
+            init_lr=0.001,
+            min_lr=0.0001,
+            patience=8,
+            tolerance=0.01,
+            factor=0.8
+        )
         #self.scheduler = ReduceLROnPlateau(self.optimizer,mode='min',factor=0.5,  patience=3, verbose=True,min_lr=1e-6 )
 
 
@@ -38,7 +46,8 @@ class TrainingManager:
     def train(self, epochs):
         self.model.to(self.device)
         best_loss = float('inf')
-        patience = 10
+        self.lr_adjuster.reset()
+        patience = 20
         patience_counter = 0
 
         for epoch in range(epochs):
@@ -76,6 +85,7 @@ class TrainingManager:
             # Aktuális Learning Rate lekérése
             current_lr = self.optimizer.param_groups[0]['lr']
 
+
             # Validation
             avg_val_loss = None
             if self.val_loader is not None:
@@ -103,7 +113,7 @@ class TrainingManager:
                                                                  tolerance=0.4)
 
                 # LR csökkentése
-                self.scheduler.step(avg_val_loss)
+                #self.scheduler.step(avg_val_loss)
 
                 if avg_val_loss < best_loss:
                     best_loss = avg_val_loss
@@ -119,6 +129,7 @@ class TrainingManager:
                     f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_train_loss:.4f}, Training Accuracy: {train_accuracy:.2f}%, "
                     f"Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%, "
                     f"MAE: {val_mae:.4f}, RMSE: {val_rmse:.4f}, LR: {current_lr:.6f}")
+                self.lr_adjuster.step(val_accuracy)
 
                 if val_rmse < 1.09 or val_accuracy > 50:
                     export(self.model, self.test_loader, self.device, epoch, 16, val_rmse)
