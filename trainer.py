@@ -1,3 +1,5 @@
+from random import random
+
 import numpy as np
 import os
 import sys
@@ -13,8 +15,10 @@ from out_csv import export
 from LRAdjuster import LRAdjuster
 
 
-
-
+def frange(start, stop, step):
+    while start <= stop:
+        yield start
+        start += step
 
 class TrainingManager:
     def __init__(self, model, train_loader, val_loader,test_loader, device):
@@ -25,23 +29,40 @@ class TrainingManager:
         self.device = device
         self.criterion = nn.L1Loss()#
         self.optimizer = optim.AdamW(self.model.parameters(), lr=0.001, weight_decay=0.01)
-        #self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.4, patience=5, verbose=True)
+
+
+
+
+        import random
+        # Faktor tartomány beállítása
+        kezdo = 0.7
+        also_hatar = kezdo - 0.4
+        felso_hatar = kezdo + 0.1
+        lepes = 0.05
+        # Értékek generálása a tartományban
+        ertekek = [round(x, 2) for x in frange(also_hatar, felso_hatar, lepes)]
+        # Véletlenszerű kiválasztás a factor tartományból
+        valasztott_factor = random.choice(ertekek)
+        # Patience tartomány beállítása (3 és 8 között)
+        valasztott_patience = random.randint(3, 8)
+        lr_values = np.arange(0.001, 0.0021, 0.0001)  # 0.0021-et használunk, mert a numpy range tartalmazza az alsó értéket, de nem az utolsót
+        init_lr = random.choice(lr_values)
+        print(f"valasztott_factor: {valasztott_factor}, valasztott_patience: {valasztott_patience}, learning rate: {init_lr}")
         self.lr_adjuster = LRAdjuster(
             self.optimizer,
-            init_lr=0.001,
+            init_lr=init_lr,
             min_lr=0.0001,
-            patience=8,
+            patience=valasztott_patience,
             tolerance=0.01,
-            factor=0.8
+            factor=valasztott_factor
         )
-        #self.scheduler = ReduceLROnPlateau(self.optimizer,mode='min',factor=0.5,  patience=3, verbose=True,min_lr=1e-6 )
+
 
 
         self.train_losses = []
         self.val_losses = []
 
-    def hyper_parameters(self):
-        return "self.optimizer = optim.AdamW(self.model.parameters(), lr=0.0005, weight_decay=0.01)  self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=0.4, patience=3, verbose=True)"
+
 
     def train(self, epochs):
         self.model.to(self.device)
