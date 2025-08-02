@@ -6,4 +6,4 @@ The final model was based on a fine-tuned ResNet, using merged amplitude and pha
 
 📄 **Documentation:** [Link](https://github.com/Gergobergo0/conTest/blob/main/DOCUMENTATION.pdf)
 
-![Focus Estimation Result](https://github.com/user-attachments/assets/ddab4810-7a5a-405a-b382-d0f825052909)
+![Image](https://github.com/user-attachments/assets/068e7678-89ad-46ae-af27-87caaf650633)
